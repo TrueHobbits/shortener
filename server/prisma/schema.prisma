@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  password_hash String
+  created_at    DateTime @default(now())
+
+  sessions Session[]
+  urls     Url[]
+
+  @@map("users")
+}
+
+model Session {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String   @unique
+  created_at DateTime @default(now())
+  expires_at DateTime
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model GuestSession {
+  id              Int      @id @default(autoincrement())
+  token           String   @unique
+  created_at      DateTime @default(now())
+  last_request_at DateTime @default(now())
+
+  urls Url[]
+
+  @@map("guest_sessions")
+}
+
+model Url {
+  id           Int      @id @default(autoincrement())
+  user_id      Int?
+  guest_token  String?
+  short_code   String   @unique
+  original_url String
+  title        String?
+  created_at   DateTime @default(now())
+  expires_at   DateTime
+
+  user         User?         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  guestSession GuestSession? @relation(fields: [guest_token], references: [token], onDelete: Cascade)
+
+  @@map("urls")
+}
+
